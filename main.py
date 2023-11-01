@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from fastapi import FastAPI
+from fastapi import BackgroundTasks, FastAPI
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -79,3 +79,16 @@ def create_invoice(invoice: Invoice, callback_url: Union[HttpUrl, None] = None):
     """
     # Send the invoice, collect the money, send the notification (the callback)
     return {"msg": "Invoice received"}
+
+#Background Tasks
+
+def write_notification(email: str, message=""):
+    with open("log.txt", mode="w") as email_file:
+        content = f"notification for {email}: {message}"
+        email_file.write(content)
+
+
+@app.post("/send-notification/{email}")
+async def send_notification(email: str, background_tasks: BackgroundTasks):
+    background_tasks.add_task(write_notification, email, message="some notification")
+    return {"message": "Notification sent in the background"}
